@@ -19,6 +19,7 @@
 #include "drv_led.h"
 #include "drv_relay.h"
 #include "drv_i2c.h"
+#include "drv_pcf8574.h"
 #include "drv_keyboard.h"
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
@@ -32,12 +33,14 @@
 /* Private macro -------------------------------------------------------------*/
 /* Private variables ---------------------------------------------------------*/
 static const char *TAG = "drv_controller";
-static SemaphoreHandle_t led_semphr, relay_semphr, i2c_semphr, key_semphr;
+static SemaphoreHandle_t i2c_semphr, lcd1602_semphr, kb_semphr, pcf8574_semphr,
+						 rtc_semphr, relay_semphr;
 static ptr_get_drv_t drv_init_vect[drv_end] = {
 	drv_led_get_driver,
 	drv_relay_get_driver,
 	drv_i2c_get_driver,
-	drv_keyboard_get_driver
+	drv_keyboard_get_driver,
+	drv_pcf8574_get_driver
 };
 static drv_t *drv_loaded[drv_end];
 static uint8_t drv_qtn_loaded;
@@ -52,17 +55,23 @@ hal_result_t drv_init_controller(void)
 
 	drv_qtn_loaded = 0;
 
-	led_semphr = xSemaphoreCreateBinary();
-	xSemaphoreGive(led_semphr);
-
-	relay_semphr = xSemaphoreCreateBinary();
-	xSemaphoreGive(relay_semphr);
-
 	i2c_semphr = xSemaphoreCreateBinary();
 	xSemaphoreGive(i2c_semphr);
 
-	key_semphr = xSemaphoreCreateBinary();
-	xSemaphoreGive(key_semphr);
+	lcd1602_semphr = xSemaphoreCreateBinary();
+	xSemaphoreGive(lcd1602_semphr);
+
+	kb_semphr = xSemaphoreCreateBinary();
+	xSemaphoreGive(kb_semphr);
+
+	pcf8574_semphr = xSemaphoreCreateBinary();
+	xSemaphoreGive(pcf8574_semphr);
+
+	rtc_semphr = xSemaphoreCreateBinary();
+	xSemaphoreGive(rtc_semphr);
+
+	relay_semphr = xSemaphoreCreateBinary();
+	xSemaphoreGive(relay_semphr);
 
 	return hal_result_ok;
 }
@@ -94,17 +103,23 @@ hal_result_t drv_call_drv(uint8_t drv_id, uint8_t drv_func_id, void *parameters)
 		{
 			switch(drv_id)
 			{
-				case drv_led:
-					xSemaphoreTake(led_semphr, portMAX_DELAY);
-					break;
-				case drv_relay:
-					xSemaphoreTake(relay_semphr, portMAX_DELAY);
-					break;
 				case drv_i2c:
 					xSemaphoreTake(i2c_semphr, portMAX_DELAY);
 					break;
+//				case drv_lcd1602:
+//					xSemaphoreTake(lcd1602_semphr, portMAX_DELAY);
+//					break;
 				case drv_keyboard:
-					xSemaphoreTake(key_semphr, portMAX_DELAY);
+					xSemaphoreTake(kb_semphr, portMAX_DELAY);
+					break;
+				case drv_pcf8574:
+					xSemaphoreTake(pcf8574_semphr, portMAX_DELAY);
+					break;
+//				case drv_rv8803:
+//					xSemaphoreTake(rtc_semphr, portMAX_DELAY);
+//					break;
+				case drv_relay:
+					xSemaphoreTake(relay_semphr, portMAX_DELAY);
 					break;
 			}
 
@@ -112,17 +127,23 @@ hal_result_t drv_call_drv(uint8_t drv_id, uint8_t drv_func_id, void *parameters)
 
 			switch(drv_id)
 			{
-				case drv_led:
-					xSemaphoreGive(led_semphr);
-					break;
-				case drv_relay:
-					xSemaphoreGive(relay_semphr);
-					break;
 				case drv_i2c:
 					xSemaphoreGive(i2c_semphr);
 					break;
+//				case drv_lcd1602:
+//					xSemaphoreGive(lcd1602_semphr);
+//					break;
 				case drv_keyboard:
-					xSemaphoreGive(key_semphr);
+					xSemaphoreGive(kb_semphr);
+					break;
+				case drv_pcf8574:
+					xSemaphoreGive(pcf8574_semphr);
+					break;
+//				case drv_rv8803:
+//					xSemaphoreGive(rtc_semphr);
+//					break;
+				case drv_relay:
+					xSemaphoreGive(relay_semphr);
 					break;
 			}
 		}

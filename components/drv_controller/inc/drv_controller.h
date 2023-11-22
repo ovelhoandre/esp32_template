@@ -41,6 +41,7 @@ enum
 	drv_relay,
 	drv_i2c,
 	drv_keyboard,
+	drv_pcf8574,
 	drv_end
 };
 

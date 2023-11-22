@@ -1,10 +1,10 @@
 /**
  ******************************************************************************
- * @file    hal_global.h
+ * @file    drv_pcf8574.h
  * @author  Eng. Eletricista Andre L. A. Lopes
  * @version V1.0.0
- * @date    Segunda, 10 de abril de 2023
- * @brief   Arquivo header com declaracoes globais ao projeto.
+ * @date    Quarta, 11 de maio de 2022
+ * @brief   Arquivo header do IO Expander.
  ******************************************************************************
  * @attention
  *
@@ -14,28 +14,41 @@
  */
 
 /* Define to prevent recursive inclusion -------------------------------------*/
-#ifndef _HAL_GLOBAL_H
-#define _HAL_GLOBAL_H
+#ifndef _DRV_PCF8574_H
+#define _DRV_PCF8574_H
 
 /* Includes ------------------------------------------------------------------*/
 #include "hal_types.h"
-#include "drv_relay.h"
-#include "drv_i2c.h"
+#include "drv_controller.h"
 
 /* Exported constants --------------------------------------------------------*/
 /* Exported types ------------------------------------------------------------*/
-typedef struct
+enum
 {
-	/* Drivers */
-	drv_i2c_init_conf_t i2c_init_conf;
-	drv_i2c_rw_conf_t pcf8574_rw_conf;
-	drv_i2c_rw_conf_t rv8803_rw_conf;
-} hal_global_data_t;
+	drv_pcf8574_write_id,
+	drv_pcf8574_end
+};
+
+typedef union
+{
+	struct
+	{
+		uint8_t bit0 : 1;
+		uint8_t bit1 : 1;
+		uint8_t bit2 : 1;
+		uint8_t bit3 : 1;
+		uint8_t bit4 : 1;
+		uint8_t bit5 : 1;
+		uint8_t bit6 : 1;
+		uint8_t bit7 : 1;
+	} bits;
+
+	uint8_t raw;
+} drv_pcf8574_port_t;
 
 /* Exported macro ------------------------------------------------------------*/
 /* Public variables ----------------------------------------------------------*/
 /* Public functions ----------------------------------------------------------*/
-hal_result_t hal_global_init(void);
-hal_global_data_t *hal_global_get_data(void);
+drv_t *drv_pcf8574_get_driver(void);
 
-#endif /*_HAL_GLOBAL_H */
+#endif /* _DRV_PCF8574_H */

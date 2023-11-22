@@ -28,6 +28,7 @@
 #include "drv_relay.h"
 #include "drv_i2c.h"
 #include "drv_keyboard.h"
+#include "drv_pcf8574.h"
 
 /* Private types -------------------------------------------------------------*/
 /* Private constants ---------------------------------------------------------*/
@@ -36,6 +37,7 @@
 static const char *TAG = "main";
 static drv_led_state_t _led_state;
 static hal_global_data_t *global_data;
+static drv_relay_conf_t relay_conf;
 
 /* Private functions prototypes ----------------------------------------------*/
 void test_led(void);
@@ -69,6 +71,12 @@ void app_main(void)
 	global_data->i2c_init_conf.scl_io_pin = 22;
 	global_data->i2c_init_conf.sda_io_pin = 21;
 	DRV_ERROR_CHECK(drv_init_drv(drv_i2c, &global_data->i2c_init_conf));
+
+	ESP_LOGI(TAG, "PCF8574 driver init");
+	global_data->pcf8574_rw_conf.i2c_num = 0;
+	global_data->pcf8574_rw_conf.slave_addr = 0x27;
+	global_data->pcf8574_rw_conf.timeout = 1000;
+	DRV_ERROR_CHECK(drv_init_drv(drv_pcf8574, &global_data->pcf8574_rw_conf));
 
 	ESP_LOGI(TAG, "Keyboard driver init");
 	DRV_ERROR_CHECK(drv_init_drv(drv_keyboard, NULL));
@@ -106,29 +114,29 @@ void test_led(void)
 
 void test_relay(void)
 {
-	global_data->relay_conf.relay_num = drv_relay_num_0;
-	DRV_ERROR_CHECK(drv_call_drv(drv_relay, drv_relay_get_state_id, &global_data->relay_conf));
-	if (global_data->relay_conf.relay_state == drv_relay_state_off)
+	relay_conf.relay_num = drv_relay_num_0;
+	DRV_ERROR_CHECK(drv_call_drv(drv_relay, drv_relay_get_state_id, &relay_conf));
+	if (relay_conf.relay_state == drv_relay_state_off)
 	{
-		global_data->relay_conf.relay_state = drv_relay_state_on;
+		relay_conf.relay_state = drv_relay_state_on;
 	}
 	else
 	{
-		global_data->relay_conf.relay_state = drv_relay_state_off;
+		relay_conf.relay_state = drv_relay_state_off;
 	}
-	DRV_ERROR_CHECK(drv_call_drv(drv_relay, drv_relay_set_state_id, &global_data->relay_conf));
+	DRV_ERROR_CHECK(drv_call_drv(drv_relay, drv_relay_set_state_id, &relay_conf));
 
-	global_data->relay_conf.relay_num = drv_relay_num_1;
-	DRV_ERROR_CHECK(drv_call_drv(drv_relay, drv_relay_get_state_id, &global_data->relay_conf));
-	if (global_data->relay_conf.relay_state == drv_relay_state_off)
+	relay_conf.relay_num = drv_relay_num_1;
+	DRV_ERROR_CHECK(drv_call_drv(drv_relay, drv_relay_get_state_id, &relay_conf));
+	if (relay_conf.relay_state == drv_relay_state_off)
 	{
-		global_data->relay_conf.relay_state = drv_relay_state_on;
+		relay_conf.relay_state = drv_relay_state_on;
 	}
 	else
 	{
-		global_data->relay_conf.relay_state = drv_relay_state_off;
+		relay_conf.relay_state = drv_relay_state_off;
 	}
-	DRV_ERROR_CHECK(drv_call_drv(drv_relay, drv_relay_set_state_id, &global_data->relay_conf));
+	DRV_ERROR_CHECK(drv_call_drv(drv_relay, drv_relay_set_state_id, &relay_conf));
 }
 
 

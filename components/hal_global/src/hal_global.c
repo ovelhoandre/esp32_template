@@ -42,6 +42,7 @@ hal_result_t hal_global_init(void)
 	//esp_log_level_set("drv_relay", ESP_LOG_INFO);
 	//esp_log_level_set("drv_i2c", ESP_LOG_INFO);
 	//esp_log_level_set("drv_keyboard", ESP_LOG_INFO);
+	//esp_log_level_set("drv_pcf8574", ESP_LOG_INFO);
 #else
 	esp_log_level_set("*", ESP_LOG_NONE);
 #endif

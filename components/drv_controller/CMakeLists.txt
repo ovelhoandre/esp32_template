@@ -5,6 +5,7 @@ set(COMPONENT_PRIV_REQUIRES "drv_generic"
 							"drv_led"
 							"drv_relay"
 							"drv_i2c"
-							"drv_keyboard")
+							"drv_keyboard"
+							"drv_pcf8574")
 register_component()
 
