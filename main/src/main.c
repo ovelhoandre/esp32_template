@@ -29,6 +29,8 @@
 #include "drv_i2c.h"
 #include "drv_keyboard.h"
 #include "drv_pcf8574.h"
+#include "drv_lcd1602.h"
+#include "drv_rv8803.h"
 
 /* Private types -------------------------------------------------------------*/
 /* Private constants ---------------------------------------------------------*/
@@ -38,6 +40,10 @@ static const char *TAG = "main";
 static drv_led_state_t _led_state;
 static hal_global_data_t *global_data;
 static drv_relay_conf_t relay_conf;
+static uint8_t backlight = 100, contrast = 60;
+static drv_lcd1602_data_t lcd1602_data;
+static drv_rtc_time_t rtc_time;
+static drv_rtc_dst_t dst;
 
 /* Private functions prototypes ----------------------------------------------*/
 void test_led(void);
@@ -78,6 +84,26 @@ void app_main(void)
 	global_data->pcf8574_rw_conf.timeout = 1000;
 	DRV_ERROR_CHECK(drv_init_drv(drv_pcf8574, &global_data->pcf8574_rw_conf));
 
+	ESP_LOGI(TAG, "lcd1602 driver init");
+	DRV_ERROR_CHECK(drv_init_drv(drv_lcd1602, NULL));
+	DRV_ERROR_CHECK(drv_call_drv(drv_lcd1602, drv_lcd1602_set_backlight_id, &backlight));
+	DRV_ERROR_CHECK(drv_call_drv(drv_lcd1602, drv_lcd1602_set_contrast_id, &contrast));
+	lcd1602_data.row = 0;
+	lcd1602_data.orientation = drv_lcd1602_orientation_center;
+	sprintf((char *)lcd1602_data.str, "Hello!");
+	DRV_ERROR_CHECK(drv_call_drv(drv_lcd1602, drv_lcd1602_write_string_id, &lcd1602_data));
+
+	ESP_LOGI(TAG, "RV8803 driver init");
+	global_data->rv8803_rw_conf.i2c_num = 0;
+	global_data->rv8803_rw_conf.slave_addr = 0x32;
+	global_data->rv8803_rw_conf.timeout = 1000;
+	DRV_ERROR_CHECK(drv_init_drv(drv_rv8803, &global_data->rv8803_rw_conf));
+	dst.dstsday = 0;
+	dst.dsteday = 0;
+	dst.dstsmon = 0;
+	dst.dstemon = 0;
+	DRV_ERROR_CHECK(drv_call_drv(drv_rv8803, drv_rv8803_set_dst_id, &dst));
+
 	ESP_LOGI(TAG, "Keyboard driver init");
 	DRV_ERROR_CHECK(drv_init_drv(drv_keyboard, NULL));
 
@@ -87,10 +113,18 @@ void app_main(void)
 	while (1)
 	{
 		/* Teste driver led */
-		test_led();
+		//test_led();
 
 		/* Teste driver relay */
 		//test_relay();
+
+		/* Teste driver rtc */
+		DRV_ERROR_CHECK(drv_call_drv(drv_rv8803, drv_rv8803_get_time_id, &rtc_time));
+
+		lcd1602_data.row = 1;
+		lcd1602_data.orientation = drv_lcd1602_orientation_left;
+		sprintf((char *)lcd1602_data.str, "    %02d:%02d:%02d  ", rtc_time.hour, rtc_time.min, rtc_time.sec);
+		drv_call_drv(drv_lcd1602, drv_lcd1602_write_string_id, &lcd1602_data);
 
 		vTaskDelay(1000 / portTICK_PERIOD_MS);
 

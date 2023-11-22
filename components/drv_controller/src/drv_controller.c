@@ -21,6 +21,8 @@
 #include "drv_i2c.h"
 #include "drv_pcf8574.h"
 #include "drv_keyboard.h"
+#include "drv_lcd1602.h"
+#include "drv_rv8803.h"
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 #include "freertos/timers.h"
@@ -40,7 +42,9 @@ static ptr_get_drv_t drv_init_vect[drv_end] = {
 	drv_relay_get_driver,
 	drv_i2c_get_driver,
 	drv_keyboard_get_driver,
-	drv_pcf8574_get_driver
+	drv_pcf8574_get_driver,
+	drv_lcd1602_get_driver,
+	drv_rv8803_get_driver
 };
 static drv_t *drv_loaded[drv_end];
 static uint8_t drv_qtn_loaded;
@@ -106,18 +110,18 @@ hal_result_t drv_call_drv(uint8_t drv_id, uint8_t drv_func_id, void *parameters)
 				case drv_i2c:
 					xSemaphoreTake(i2c_semphr, portMAX_DELAY);
 					break;
-//				case drv_lcd1602:
-//					xSemaphoreTake(lcd1602_semphr, portMAX_DELAY);
-//					break;
+				case drv_lcd1602:
+					xSemaphoreTake(lcd1602_semphr, portMAX_DELAY);
+					break;
 				case drv_keyboard:
 					xSemaphoreTake(kb_semphr, portMAX_DELAY);
 					break;
 				case drv_pcf8574:
 					xSemaphoreTake(pcf8574_semphr, portMAX_DELAY);
 					break;
-//				case drv_rv8803:
-//					xSemaphoreTake(rtc_semphr, portMAX_DELAY);
-//					break;
+				case drv_rv8803:
+					xSemaphoreTake(rtc_semphr, portMAX_DELAY);
+					break;
 				case drv_relay:
 					xSemaphoreTake(relay_semphr, portMAX_DELAY);
 					break;
@@ -130,18 +134,18 @@ hal_result_t drv_call_drv(uint8_t drv_id, uint8_t drv_func_id, void *parameters)
 				case drv_i2c:
 					xSemaphoreGive(i2c_semphr);
 					break;
-//				case drv_lcd1602:
-//					xSemaphoreGive(lcd1602_semphr);
-//					break;
+				case drv_lcd1602:
+					xSemaphoreGive(lcd1602_semphr);
+					break;
 				case drv_keyboard:
 					xSemaphoreGive(kb_semphr);
 					break;
 				case drv_pcf8574:
 					xSemaphoreGive(pcf8574_semphr);
 					break;
-//				case drv_rv8803:
-//					xSemaphoreGive(rtc_semphr);
-//					break;
+				case drv_rv8803:
+					xSemaphoreGive(rtc_semphr);
+					break;
 				case drv_relay:
 					xSemaphoreGive(relay_semphr);
 					break;

@@ -1,10 +1,10 @@
 /**
  ******************************************************************************
- * @file    drv_controller.h
+ * @file    drv_rv8803.h
  * @author  Eng. Eletricista Andre L. A. Lopes
  * @version V1.0.0
- * @date    Segunda, 10 de abril de 2023
- * @brief   Arquivo header da controladora de drivers.
+ * @date    Quarta, 11 de maio de 2022
+ * @brief   Arquivo header do RTC.
  ******************************************************************************
  * @attention
  *
@@ -14,44 +14,54 @@
  */
 
 /* Define to prevent recursive inclusion -------------------------------------*/
-#ifndef _DRV_CONTROLLER_H
-#define _DRV_CONTROLLER_H
+#ifndef _DRV_RV8803_H
+#define _DRV_RV8803_H
 
 /* Includes ------------------------------------------------------------------*/
-#include <stdint.h>
 #include "hal_types.h"
+#include "drv_controller.h"
 
 /* Exported constants --------------------------------------------------------*/
+#define WDAY_SUNDAY_FLAG	(1 << 0)
+#define WDAY_MONDAY_FLAG	(1 << 1)
+#define WDAY_TUESDAY_FLAG	(1 << 2)
+#define WDAY_WEDNESDAY_FLAG	(1 << 3)
+#define WDAY_THURSDAY_FLAG	(1 << 4)
+#define WDAY_FRIDAY_FLAG	(1 << 5)
+#define WDAY_SATURDAY_FLAG	(1 << 6)
+
 /* Exported types ------------------------------------------------------------*/
-typedef hal_result_t (*ptr_init_drv_t)(uint8_t drv_id, void *parameters);
-typedef hal_result_t (*ptr_func_drv_t)(void *parameters);
+enum
+{
+	drv_rv8803_set_time_id,
+	drv_rv8803_get_time_id,
+	drv_rv8803_set_dst_id,
+	drv_rv8803_end
+};
 
 typedef struct
 {
-	uint8_t id;
-	ptr_init_drv_t init;
-	ptr_func_drv_t *function;
-}drv_t;
+  uint8_t	sec;
+  uint8_t	min;
+  uint8_t	hour;
+  uint8_t	mday;
+  uint8_t	mon;
+  uint8_t	year;
+  uint8_t	wday;
+  uint8_t	yday;
+} drv_rtc_time_t;
 
-typedef drv_t *(*ptr_get_drv_t)(void);
-
-enum
+typedef struct
 {
-	drv_led,
-	drv_relay,
-	drv_i2c,
-	drv_keyboard,
-	drv_pcf8574,
-	drv_lcd1602,
-	drv_rv8803,
-	drv_end
-};
+	uint8_t	dstsday;	// Dia de inicio horario de verao
+	uint8_t	dsteday;	// Dia de fim do horario de verao
+	uint8_t	dstsmon;	// Mes de inicio horario de verao
+	uint8_t	dstemon;	// Mes de fim do horario de verao
+} drv_rtc_dst_t;
 
 /* Exported macro ------------------------------------------------------------*/
 /* Public variables ----------------------------------------------------------*/
 /* Public functions ----------------------------------------------------------*/
-hal_result_t drv_init_controller(void);
-hal_result_t drv_init_drv(uint8_t drv_id, void *parameters);
-hal_result_t drv_call_drv(uint8_t drv_id, uint8_t drv_func_id, void *parameters);
+drv_t *drv_rv8803_get_driver(void);
 
-#endif /*_DRV_CONTROLLER_H */
+#endif /* _DRV_RV8803_H */
