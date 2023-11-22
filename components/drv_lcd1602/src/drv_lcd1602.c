@@ -30,7 +30,7 @@
 #include "esp_system.h"
 #include "rom/ets_sys.h"
 #include "driver/ledc.h"
-#include "driver/dac.h"
+#include "driver/dac_oneshot.h"
 
 /* Private types -------------------------------------------------------------*/
 /* Private constants ---------------------------------------------------------*/
@@ -104,6 +104,7 @@ static drv_t _this_drv;
 static ptr_func_drv_t _this_function[drv_lcd1602_end];
 static uint8_t _display_control_flags;	// < Currently active display control flags
 static uint8_t _entry_mode_flags;		// < Currently active entry mode flags
+static dac_oneshot_handle_t chan1_handle;
 
 static uint8_t _char_custom_0[8] = {0x00, 0x0E, 0x11, 0x04, 0x0A, 0x00, 0x04, 0x00}; // Simbolo Wi-Fi
 static uint8_t _char_custom_1[8] = {0x00, 0x00, 0x01, 0x02, 0x14, 0x08, 0x00, 0x00}; // Simbolo sinalsinho de check
@@ -156,8 +157,6 @@ static hal_result_t _write_to_expander(uint8_t data)
 // clock data from expander to LCD by causing a falling edge on Enable
 static hal_result_t _strobe_enable(uint8_t data)
 {
-	hal_result_t hal_result;
-
 	if (_write_to_expander(data | FLAG_ENABLE) != hal_result_ok)
 	{
 		return hal_result_fail;
@@ -244,6 +243,12 @@ hal_result_t _drv_lcd1602_init(uint8_t drv_id, void *parameters)
 	_drv_lcd1602_define_char(&lcd1602_data);
 	lcd1602_data.str[0] = I2C_LCD1602_CHARACTER_CUSTOM_2;
 	_drv_lcd1602_define_char(&lcd1602_data);
+
+    /* DAC oneshot init */
+    dac_oneshot_config_t chan1_cfg = {
+        .chan_id = DAC_CHAN_1,
+    };
+    ESP_ERROR_CHECK(dac_oneshot_new_channel(&chan1_cfg, &chan1_handle));
 
     return hal_result;
 }
@@ -444,8 +449,10 @@ hal_result_t _drv_lcd1602_set_backlight(void *parameters)
 
 hal_result_t _drv_lcd1602_set_contrast(void *parameters)
 {
-	dac_output_enable(DAC_CHANNEL_2);
-	dac_output_voltage(DAC_CHANNEL_2, 255 - ((*(uint8_t *)parameters * 255) / 100));
+	if (dac_oneshot_output_voltage(chan1_handle, 255 - ((*(uint8_t *)parameters * 255) / 100)) != ESP_OK)
+	{
+		return hal_result_fail;
+	}
 
 	return hal_result_ok;
 }
