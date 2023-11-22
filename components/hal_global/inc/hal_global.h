@@ -21,6 +21,8 @@
 #include <stdint.h>
 
 /* Exported constants --------------------------------------------------------*/
+#define PRJ_DEBUG
+
 /* Exported types ------------------------------------------------------------*/
 typedef enum
 {
