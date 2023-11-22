@@ -19,7 +19,7 @@
 
 /* Includes ------------------------------------------------------------------*/
 #include <stdint.h>
-#include "hal_global.h"
+#include "hal_types.h"
 
 /* Exported constants --------------------------------------------------------*/
 /* Exported types ------------------------------------------------------------*/
@@ -39,6 +39,7 @@ enum
 {
 	drv_led,
 	drv_relay,
+	drv_i2c,
 	drv_end
 };
 

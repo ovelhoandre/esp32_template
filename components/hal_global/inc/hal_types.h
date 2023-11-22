@@ -1,6 +1,6 @@
 /**
  ******************************************************************************
- * @file    hal_global.h
+ * @file    hal_types.h
  * @author  Eng. Eletricista Andre L. A. Lopes
  * @version V1.0.0
  * @date    Segunda, 10 de abril de 2023
@@ -14,26 +14,33 @@
  */
 
 /* Define to prevent recursive inclusion -------------------------------------*/
-#ifndef _HAL_GLOBAL_H
-#define _HAL_GLOBAL_H
+#ifndef _HAL_TYPES_H
+#define _HAL_TYPES_H
 
 /* Includes ------------------------------------------------------------------*/
-#include "hal_types.h"
-#include "drv_relay.h"
-#include "drv_i2c.h"
+#include <stdint.h>
+#include "esp_err.h"
+#include "esp_log.h"
 
 /* Exported constants --------------------------------------------------------*/
+#define PRJ_DEBUG
+
 /* Exported types ------------------------------------------------------------*/
-typedef struct
+typedef enum
 {
-	drv_relay_conf_t relay_conf;
-	drv_i2c_init_conf_t i2c_init_conf;
-} hal_global_data_t;
+	hal_result_fail = 0,
+	hal_result_ok
+} hal_result_t;
 
 /* Exported macro ------------------------------------------------------------*/
+#define DRV_ERROR_CHECK(x) do {                                                         \
+		hal_result_t hal_result = (x);                                                  \
+        if (unlikely(hal_result != hal_result_ok)) {                                    \
+            _esp_error_check_failed(hal_result, __FILE__, __LINE__, __ASSERT_FUNC, #x); \
+        }                                                                               \
+    } while(0)
+
 /* Public variables ----------------------------------------------------------*/
 /* Public functions ----------------------------------------------------------*/
-hal_result_t hal_global_init(void);
-hal_global_data_t *hal_global_get_data(void);
 
-#endif /*_HAL_GLOBAL_H */
+#endif /*_HAL_TYPES_H */

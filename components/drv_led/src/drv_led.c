@@ -15,8 +15,8 @@
 
 /* Includes ------------------------------------------------------------------*/
 #include "drv_controller.h"
+#include "hal_types.h"
 #include "drv_led.h"
-#include "hal_global.h"
 #include "esp_err.h"
 #include "esp_log.h"
 #include "freertos/FreeRTOS.h"
@@ -59,7 +59,7 @@ drv_t *drv_led_get_driver(void)
 hal_result_t _drv_led_init(uint8_t drv_id, void *parameters)
 {
 	ESP_LOGI(TAG, "%s", __FUNCTION__);
-	ESP_LOGI(TAG, "this_drv.id = %d", drv_id);
+	ESP_LOGI(TAG, "_this_drv.id = %d", drv_id);
 
 	_this_drv.id = drv_id;
 

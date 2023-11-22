@@ -15,9 +15,10 @@
 
 /* Includes ------------------------------------------------------------------*/
 #include "drv_controller.h"
-#include "hal_global.h"
+#include "hal_types.h"
 #include "drv_led.h"
 #include "drv_relay.h"
+#include "drv_i2c.h"
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 #include "freertos/timers.h"
@@ -30,10 +31,11 @@
 /* Private macro -------------------------------------------------------------*/
 /* Private variables ---------------------------------------------------------*/
 static const char *TAG = "drv_controller";
-static SemaphoreHandle_t led_semphr, relay_semphr;
+static SemaphoreHandle_t led_semphr, relay_semphr, i2c_semphr;
 static ptr_get_drv_t drv_init_vect[drv_end] = {
 	drv_led_get_driver,
-	drv_relay_get_driver
+	drv_relay_get_driver,
+	drv_i2c_get_driver
 };
 static drv_t *drv_loaded[drv_end];
 static uint8_t drv_qtn_loaded;
@@ -53,6 +55,9 @@ hal_result_t drv_init_controller(void)
 
 	relay_semphr = xSemaphoreCreateBinary();
 	xSemaphoreGive(relay_semphr);
+
+	i2c_semphr = xSemaphoreCreateBinary();
+	xSemaphoreGive(i2c_semphr);
 
 	return hal_result_ok;
 }
@@ -90,6 +95,9 @@ hal_result_t drv_call_drv(uint8_t drv_id, uint8_t drv_func_id, void *parameters)
 				case drv_relay:
 					xSemaphoreTake(relay_semphr, portMAX_DELAY);
 					break;
+				case drv_i2c:
+					xSemaphoreTake(i2c_semphr, portMAX_DELAY);
+					break;
 			}
 
 			hal_result = drv_loaded[i]->function[drv_func_id](parameters);
@@ -101,6 +109,9 @@ hal_result_t drv_call_drv(uint8_t drv_id, uint8_t drv_func_id, void *parameters)
 					break;
 				case drv_relay:
 					xSemaphoreGive(relay_semphr);
+					break;
+				case drv_i2c:
+					xSemaphoreGive(i2c_semphr);
 					break;
 			}
 		}

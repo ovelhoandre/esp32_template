@@ -18,7 +18,7 @@
 #define _DRV_LED_H
 
 /* Includes ------------------------------------------------------------------*/
-#include "hal_global.h"
+#include "hal_types.h"
 #include "drv_controller.h"
 
 /* Exported constants --------------------------------------------------------*/

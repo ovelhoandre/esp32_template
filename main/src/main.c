@@ -16,6 +16,7 @@
 /* Includes ------------------------------------------------------------------*/
 #include <stdio.h>
 #include "main.h"
+#include "hal_types.h"
 #include "hal_global.h"
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
@@ -25,6 +26,7 @@
 #include "drv_controller.h"
 #include "drv_led.h"
 #include "drv_relay.h"
+#include "drv_i2c.h"
 
 /* Private types -------------------------------------------------------------*/
 /* Private constants ---------------------------------------------------------*/
@@ -32,7 +34,7 @@
 /* Private variables ---------------------------------------------------------*/
 static const char *TAG = "main";
 static drv_led_state_t _led_state;
-drv_relay_conf_t relay_conf;
+static hal_global_data_t *global_data;
 
 /* Private functions prototypes ----------------------------------------------*/
 
@@ -45,27 +47,9 @@ drv_relay_conf_t relay_conf;
  */
 void app_main(void)
 {
-#if defined(PRJ_DEBUG)
-	esp_log_level_set("*", ESP_LOG_ERROR);
-	esp_log_level_set("main", ESP_LOG_INFO);
-	esp_log_level_set("drv_controller", ESP_LOG_INFO);
-	esp_log_level_set("drv_generic", ESP_LOG_INFO);
-	//esp_log_level_set("drv_led", ESP_LOG_INFO);
-	//esp_log_level_set("drv_relay", ESP_LOG_INFO);
-#else
-	esp_log_level_set("*", ESP_LOG_NONE);
-#endif
-	/* Watchdog init */
-	esp_task_wdt_config_t twdt_config = {
-	        .timeout_ms = 10000, // 10s
-	        .idle_core_mask = (1 << portNUM_PROCESSORS) - 1, // Bitmask of all cores
-	        .trigger_panic = true
-	};
-#if !CONFIG_ESP_TASK_WDT_INIT
-	ESP_ERROR_CHECK(esp_task_wdt_init(&twdt_config));
-#else
-	ESP_ERROR_CHECK(esp_task_wdt_reconfigure(&twdt_config));
-#endif
+	ESP_LOGI(TAG, "Global project init");
+	DRV_ERROR_CHECK(hal_global_init());
+	global_data = hal_global_get_data();
 
     ESP_LOGI(TAG, "Driver controller init");
     DRV_ERROR_CHECK(drv_init_controller());
@@ -75,6 +59,13 @@ void app_main(void)
 
 	ESP_LOGI(TAG, "Relay driver init");
 	DRV_ERROR_CHECK(drv_init_drv(drv_relay, NULL));
+
+	ESP_LOGI(TAG, "i2c driver init");
+	global_data->i2c_init_conf.clock = 100000;
+	global_data->i2c_init_conf.i2c_num = 0;
+	global_data->i2c_init_conf.scl_io_pin = 22;
+	global_data->i2c_init_conf.sda_io_pin = 21;
+	DRV_ERROR_CHECK(drv_init_drv(drv_i2c, &global_data->i2c_init_conf));
 
     ESP_ERROR_CHECK(esp_task_wdt_add(NULL));
     ESP_ERROR_CHECK(esp_task_wdt_status(NULL));
@@ -94,29 +85,29 @@ void app_main(void)
 		DRV_ERROR_CHECK(drv_call_drv(drv_led, drv_led_set_state_id, &_led_state));
 
 		/* Teste driver relay */
-		relay_conf.relay_num = drv_relay_num_0;
-		DRV_ERROR_CHECK(drv_call_drv(drv_relay, drv_relay_get_state_id, &relay_conf));
-		if (relay_conf.relay_state == drv_relay_state_off)
+		global_data->relay_conf.relay_num = drv_relay_num_0;
+		DRV_ERROR_CHECK(drv_call_drv(drv_relay, drv_relay_get_state_id, &global_data->relay_conf));
+		if (global_data->relay_conf.relay_state == drv_relay_state_off)
 		{
-			relay_conf.relay_state = drv_relay_state_on;
+			global_data->relay_conf.relay_state = drv_relay_state_on;
 		}
 		else
 		{
-			relay_conf.relay_state = drv_relay_state_off;
+			global_data->relay_conf.relay_state = drv_relay_state_off;
 		}
-		DRV_ERROR_CHECK(drv_call_drv(drv_relay, drv_relay_set_state_id, &relay_conf));
+		DRV_ERROR_CHECK(drv_call_drv(drv_relay, drv_relay_set_state_id, &global_data->relay_conf));
 
-		relay_conf.relay_num = drv_relay_num_1;
-		DRV_ERROR_CHECK(drv_call_drv(drv_relay, drv_relay_get_state_id, &relay_conf));
-		if (relay_conf.relay_state == drv_relay_state_off)
+		global_data->relay_conf.relay_num = drv_relay_num_1;
+		DRV_ERROR_CHECK(drv_call_drv(drv_relay, drv_relay_get_state_id, &global_data->relay_conf));
+		if (global_data->relay_conf.relay_state == drv_relay_state_off)
 		{
-			relay_conf.relay_state = drv_relay_state_on;
+			global_data->relay_conf.relay_state = drv_relay_state_on;
 		}
 		else
 		{
-			relay_conf.relay_state = drv_relay_state_off;
+			global_data->relay_conf.relay_state = drv_relay_state_off;
 		}
-		DRV_ERROR_CHECK(drv_call_drv(drv_relay, drv_relay_set_state_id, &relay_conf));
+		DRV_ERROR_CHECK(drv_call_drv(drv_relay, drv_relay_set_state_id, &global_data->relay_conf));
 
 		vTaskDelay(1000 / portTICK_PERIOD_MS);
 

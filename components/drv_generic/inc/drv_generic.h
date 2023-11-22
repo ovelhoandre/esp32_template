@@ -18,7 +18,7 @@
 #define _DRV_GENERIC_H
 
 /* Includes ------------------------------------------------------------------*/
-#include "esp_err.h"
+#include "hal_types.h"
 #include "drv_controller.h"
 
 /* Exported constants --------------------------------------------------------*/
